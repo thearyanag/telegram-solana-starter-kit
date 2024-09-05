@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react"
 import { useInitData, useLaunchParams } from "@telegram-apps/sdk-react"
 import { connect } from "../utils/phantom"
+import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { redirect } from "next/navigation"
 
-export default function Home() {
+export function Home() {
   const initData = useInitData(true)
   const launchParams = useLaunchParams(true)
   const [authStatus, setAuthStatus] = useState("")
