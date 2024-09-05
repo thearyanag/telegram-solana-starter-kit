@@ -1,29 +1,16 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useInitData, useLaunchParams } from "@telegram-apps/sdk-react"
+import { useInitData } from "@telegram-apps/sdk-react"
 import { connect } from "../utils/phantom"
 import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 
-export function Home() {
+export function Homepage() {
   const initData = useInitData(true)
-  const launchParams = useLaunchParams(true)
   const [authStatus, setAuthStatus] = useState("")
-
-  useEffect(() => {
-    if (launchParams && launchParams.startParam) {
-      if (launchParams.startParam.startsWith("auth_success_")) {
-        setAuthStatus("success")
-      } else if (launchParams.startParam.startsWith("auth_failure_")) {
-        setAuthStatus("failure")
-      } else if (launchParams.startParam.startsWith("auth_error_")) {
-        setAuthStatus("error")
-      }
-    }
-  }, [launchParams])
 
   const handleAuthenticate = () => {
     let url = connect()

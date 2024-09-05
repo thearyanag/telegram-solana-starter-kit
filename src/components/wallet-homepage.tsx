@@ -1,29 +1,76 @@
 'use client'
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ArrowRightIcon, LogOutIcon, SendIcon } from "lucide-react";
+import { Transaction, WalletData } from "@/types";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { ArrowRightIcon, LogOutIcon, SendIcon } from "lucide-react"
+export function WalletHomepage(): JSX.Element {
+  const [walletAddress, setWalletAddress] = useState<string>("");
+  const [balance, setBalance] = useState<number>(0);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
-export function WalletHomepage() {
-  const [balance, setBalance] = useState(1234.56)
-  const [transactions, setTransactions] = useState([
-    { id: 1, type: "Received", amount: 50, from: "Alice", date: "2023-04-01" },
-    { id: 2, type: "Sent", amount: 30, to: "Bob", date: "2023-04-02" },
-    { id: 3, type: "Received", amount: 100, from: "Charlie", date: "2023-04-03" },
-  ])
+  const fetchWalletData = async (): Promise<void> => {
+    if (!walletAddress) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/wallet?address=${walletAddress}`);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data: WalletData = await response.json();
+      setBalance(data.balance);
+      setTransactions(data.transactions);
+    } catch (error) {
+      console.error("Error fetching wallet data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleDisconnect = () => {
-    // Implement wallet disconnection logic here
-    console.log("Wallet disconnected")
-  }
+  useEffect(() => {
+    fetchWalletData();
+  }, [walletAddress]);
 
-  const handleSendMoney = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleDisconnect = (): void => {
+    setWalletAddress("");
+    setBalance(0);
+    setTransactions([]);
+  };
+
+  const handleSendMoney = (e: React.FormEvent<HTMLFormElement>): void => {
+    e.preventDefault();
     // Implement send money logic here
-    console.log("Money sent")
+    console.log("Money sent");
+  };
+
+  if (!walletAddress) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Connect Wallet</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Input
+              type="text"
+              placeholder="Enter wallet address"
+              value={walletAddress}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setWalletAddress(e.target.value)
+              }
+              className="mb-4"
+            />
+            <Button onClick={fetchWalletData} className="w-full">
+              Connect
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -40,7 +87,6 @@ export function WalletHomepage() {
             <p className="text-sm text-gray-500">Current Balance</p>
             <p className="text-4xl font-bold">${balance.toFixed(2)}</p>
           </div>
-          
           <form onSubmit={handleSendMoney} className="space-y-4 mb-6">
             <Input type="text" placeholder="Recipient address" />
             <Input type="number" placeholder="Amount" step="0.01" min="0" />
@@ -48,28 +94,51 @@ export function WalletHomepage() {
               <SendIcon className="mr-2 h-4 w-4" /> Send Money
             </Button>
           </form>
-          
           <div>
             <h3 className="font-semibold mb-2">Transaction History</h3>
-            <ScrollArea className="h-[200px]">
-              {transactions.map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                  <div className="flex items-center">
-                    <ArrowRightIcon className={`h-4 w-4 mr-2 ${tx.type === "Received" ? "text-green-500 rotate-180" : "text-red-500"}`} />
-                    <div>
-                      <p className="text-sm font-medium">{tx.type === "Received" ? `From ${tx.from}` : `To ${tx.to}`}</p>
-                      <p className="text-xs text-gray-500">{tx.date}</p>
+            {loading ? (
+              <p>Loading...</p>
+            ) : (
+              <ScrollArea className="h-[200px]">
+                {transactions.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className="flex items-center justify-between py-2 border-b last:border-b-0"
+                  >
+                    <div className="flex items-center">
+                      <ArrowRightIcon
+                        className={`h-4 w-4 mr-2 ${
+                          tx.type === "Received"
+                            ? "text-green-500 rotate-180"
+                            : "text-red-500"
+                        }`}
+                      />
+                      <div>
+                        <p className="text-sm font-medium">
+                          {tx.type === "Received"
+                            ? `From ${tx.from}`
+                            : `To ${tx.to}`}
+                        </p>
+                        <p className="text-xs text-gray-500">{tx.date}</p>
+                      </div>
                     </div>
+                    <p
+                      className={`font-medium ${
+                        tx.type === "Received"
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {tx.type === "Received" ? "+" : "-"}$
+                      {tx.amount.toFixed(2)}
+                    </p>
                   </div>
-                  <p className={`font-medium ${tx.type === "Received" ? "text-green-500" : "text-red-500"}`}>
-                    {tx.type === "Received" ? "+" : "-"}${tx.amount}
-                  </p>
-                </div>
-              ))}
-            </ScrollArea>
+                ))}
+              </ScrollArea>
+            )}
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
