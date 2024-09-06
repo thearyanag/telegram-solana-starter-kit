@@ -19,11 +19,11 @@ export function FailedAuth() {
         </CardHeader>
         <CardContent className="text-center">
           <p className="text-gray-600 mb-4">
-            We couldn't link your Phantom wallet to your Telegram account. Please try again.
+            We couldn&apos;t link your Phantom wallet to your Telegram account. Please try again.
           </p>
           <div className="bg-red-100 p-4 rounded-lg mb-4">
             <p className="text-sm text-red-800 font-medium">
-              Make sure you have a Phantom wallet set up and you're approving the connection request.
+              Make sure you have a Phantom wallet set up and you&apos;re approving the connection request.
             </p>
           </div>
         </CardContent>

@@ -11,9 +11,6 @@ export async function GET(
     let user = getCache(`user_${userId}`);
     return NextResponse.json(user);
   } catch (error) {
-    return {
-      status: 500,
-      body: { message: "Failed to get user data" },
-    };
+    return NextResponse.json({ error: "user data not found" }, { status: 500 });
   }
 }
