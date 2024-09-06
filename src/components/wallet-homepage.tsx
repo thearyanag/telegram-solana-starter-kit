@@ -8,7 +8,7 @@ import { ArrowRightIcon, LogOutIcon, SendIcon } from "lucide-react";
 import { Transaction, WalletData } from "@/types";
 
 export function WalletHomepage(): JSX.Element {
-  const [walletAddress, setWalletAddress] = useState<string>("");
+  const [walletAddress, setWalletAddress] = useState<string>("CRtPaRBqT274CaE5X4tFgjccx5XXY5zKYfLPnvitKdJx");
   const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(false);

@@ -1,28 +1,41 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useInitData } from "@telegram-apps/sdk-react"
-import { connect } from "../utils/phantom"
-import Image from "next/image"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react";
+import { useInitData, useLaunchParams , useCloudStorage } from "@telegram-apps/sdk-react";
+import { connect } from "../utils/phantom";
+import Image from "next/image";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
 
 export function Homepage() {
-  const initData = useInitData(true)
-  const [authStatus, setAuthStatus] = useState("")
+  const initData = useInitData(true);
+  const launchParams = useLaunchParams();
+  const [authStatus, setAuthStatus] = useState("");
+  const storage = useCloudStorage();
 
   const handleAuthenticate = () => {
-    let url = connect()
-    window.open(url, "_blank")
-  }
+    let url = connect();
+    window.location.href = url;
+  };
+
+  useEffect(() => {
+    if (launchParams && launchParams.startParam === "command") {
+      setAuthStatus("success");
+    }
+  }, [launchParams]);
+
+  useEffect(() => {
+    if (authStatus === "success") redirect("/wallet");
+  }, [authStatus]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-gray-100">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-3xl font-bold text-center">
-            Telegram Phantom Auth
+            Telegram Solana Starter Kit
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -44,7 +57,8 @@ export function Homepage() {
               )}
               {authStatus === "error" && (
                 <p>
-                  An error occurred during authentication. Please try again later.
+                  An error occurred during authentication. Please try again
+                  later.
                 </p>
               )}
             </div>
@@ -54,8 +68,13 @@ export function Homepage() {
             <div className="mb-6 text-center">
               <div className="mb-4 flex justify-center">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={initData.user.photoUrl || "/default-avatar.png"} alt="User avatar" />
-                  <AvatarFallback>{initData.user.firstName.charAt(0)}</AvatarFallback>
+                  <AvatarImage
+                    src={initData.user.photoUrl || "/default-avatar.png"}
+                    alt="User avatar"
+                  />
+                  <AvatarFallback>
+                    {initData.user.firstName.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
               </div>
               <p className="text-xl font-semibold text-gray-700 mb-2">
@@ -74,15 +93,12 @@ export function Homepage() {
           )}
 
           {authStatus !== "success" && (
-            <Button
-              onClick={handleAuthenticate}
-              className="w-full"
-            >
+            <Button onClick={handleAuthenticate} className="w-full">
               Authenticate with Phantom
             </Button>
           )}
         </CardContent>
       </Card>
     </main>
-  )
+  );
 }

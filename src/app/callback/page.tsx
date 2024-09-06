@@ -14,7 +14,7 @@ export default function Callback() {
           setStatus('success');
           setMessage('Authentication Successful! Redirecting back to Telegram...');
           setTimeout(() => {
-            window.location.href = `https://t.me/phantom_wallet_test_bot`;
+            window.location.href = `https://t.me/phantom_wallet_test_bot/phantom?startapp=command`;
           }, 3000);
         } else {
           setStatus('error');
