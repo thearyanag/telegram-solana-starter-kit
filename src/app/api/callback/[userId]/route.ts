@@ -35,10 +35,7 @@ export async function GET(
     );
     const decryptedData = decryptPayload(data, nonce, sharedSecretDapp);
     console.log(decryptedData);
-    setCache(`user_${userId}`, {
-      session: decryptedData.session,
-      public_key: decryptedData.public_key,
-    });
+    setCache(`user_${userId}`, decryptedData);
     console.log("Authentication successful");
     return NextResponse.redirect(
       `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/${process.env.NEXT_PUBLIC_BOT_APP_NAME}?startapp=success`

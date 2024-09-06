@@ -1,25 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from 'next/navigation';
 import {
   useInitData,
   useLaunchParams,
   useCloudStorage,
 } from "@telegram-apps/sdk-react";
 import { connect } from "../utils/phantom";
-import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { redirect } from "next/navigation";
 import { SuccessfulAuth } from "./successful-auth";
 import { FailedAuth } from "./failed-auth";
+import { AuthLoader } from "./auth-loader";
+import { useUser } from "@/context/user-context";
 
 export function Homepage() {
   const initData = useInitData();
   const launchParams = useLaunchParams();
   const [authStatus, setAuthStatus] = useState("");
   const storage = useCloudStorage();
+  const router = useRouter();
+  const { user, setUser, loading } = useUser();
 
   const handleAuthenticate = () => {
     if (!initData?.user?.id) return;
@@ -28,23 +31,38 @@ export function Homepage() {
   };
 
   useEffect(() => {
-    if (launchParams && launchParams.startParam === "success") {
+    if (user) {
+      router.push('/wallet');
+    } else if (launchParams && launchParams.startParam === "success") {
       setAuthStatus("success");
-    }
-    if (launchParams && launchParams.startParam === "failure") {
+      if (initData?.user?.id)
+        fetch(`/api/auth/${initData.user.id}`).then((res) => {
+          if (res.ok) {
+            res.json().then((data) => {
+              storage.set("user", JSON.stringify(data));
+              setUser(data);
+              router.push('/wallet');
+            });
+          }
+        });
+    } else if (launchParams && launchParams.startParam === "failure") {
       setAuthStatus("failure");
     }
-  }, [launchParams]);
+  }, [launchParams, initData?.user?.id, user, router]);
 
-  // useEffect(() => {
-  //   if (authStatus === "success") redirect("/wallet");
-  // }, [authStatus]);
+  if (loading) {
+    return <AuthLoader />;
+  }
 
-  return authStatus === "success" ? (
-    <SuccessfulAuth />
-  ) : authStatus === "failure" ? (
-    <FailedAuth />
-  ) : (
+  if (authStatus === "success") {
+    return <SuccessfulAuth />;
+  }
+
+  if (authStatus === "failure") {
+    return <FailedAuth />;
+  }
+
+  return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-gray-100">
       <Card className="w-full max-w-md">
         <CardHeader>
@@ -53,31 +71,6 @@ export function Homepage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {authStatus && (
-            <div
-              className={`mb-4 text-center ${
-                authStatus === "success"
-                  ? "text-green-600"
-                  : authStatus === "failure"
-                  ? "text-destructive"
-                  : "text-yellow-600"
-              }`}
-            >
-              {authStatus === "success" && (
-                <p>Successfully authenticated with Phantom!</p>
-              )}
-              {authStatus === "failure" && (
-                <p>Authentication failed. Please try again.</p>
-              )}
-              {authStatus === "error" && (
-                <p>
-                  An error occurred during authentication. Please try again
-                  later.
-                </p>
-              )}
-            </div>
-          )}
-
           {initData && initData.user && (
             <div className="mb-6 text-center">
               <div className="mb-4 flex justify-center">
@@ -103,15 +96,12 @@ export function Homepage() {
               <p className="text-sm text-gray-600">
                 {initData.user.isBot ? "Bot Account" : "User Account"}
               </p>
-              <p className="text-sm text-gray-600">hi {initData.startParam}</p>
             </div>
           )}
 
-          {authStatus !== "success" && (
-            <Button onClick={handleAuthenticate} className="w-full">
-              Authenticate with Phantom
-            </Button>
-          )}
+          <Button onClick={handleAuthenticate} className="w-full">
+            Authenticate with Phantom
+          </Button>
         </CardContent>
       </Card>
     </main>

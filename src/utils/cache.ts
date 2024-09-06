@@ -6,8 +6,12 @@ const cache = new NodeCache({
   useClones: false,
 });
 
+export const getAll = () => {
+  return cache.keys();
+};
+
 export const setCache = (key: string, value: any) => {
-  cache.set(key, value);
+  console.log("c",cache.set(key, value));
 };
 
 export const getCache = (key: string) => {
