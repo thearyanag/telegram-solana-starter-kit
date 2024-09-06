@@ -6,12 +6,12 @@ const dappKeyPair = nacl.box.keyPair.fromSecretKey(
   bs58.decode("6WmwqxUhJ86s97czVsRREiP7m5WeMMQdnRE3e7ecwgUy")
 );
 
-const onConnectRedirectLink = `${process.env.NEXT_PUBLIC_URL}/callback`;
+const onConnectRedirectLink = `${process.env.NEXT_PUBLIC_URL}/api/callback`;
 
 const buildUrl = (path: string, params: URLSearchParams) =>
   `https://phantom.app/ul/v1/${path}?${params.toString()}`;
 
-const decryptPayload = (
+export const decryptPayload = (
   data: string,
   nonce: string,
   sharedSecret?: Uint8Array
@@ -29,12 +29,26 @@ const decryptPayload = (
   return JSON.parse(Buffer.from(decryptedData).toString("utf8"));
 };
 
-export const connect = () => {
+export const encryptPayload = (payload: any, sharedSecret?: Uint8Array) => {
+  if (!sharedSecret) throw new Error("missing shared secret");
+
+  const nonce = nacl.randomBytes(24);
+
+  const encryptedPayload = nacl.box.after(
+    Buffer.from(JSON.stringify(payload)),
+    nonce,
+    sharedSecret
+  );
+
+  return [nonce, encryptedPayload];
+};
+
+export const connect = (userId: number) => {
   const params = new URLSearchParams({
     dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
     cluster: "mainnet-beta",
-    app_url: `${process.env.NEXT_PUBLIC_URL}`,
-    redirect_link: onConnectRedirectLink,
+    app_url: `${process.env.NEXT_PUBLIC_URL}/`,
+    redirect_link: `${onConnectRedirectLink}/${userId}`,
   });
 
   const url = buildUrl("connect", params);
@@ -42,30 +56,27 @@ export const connect = () => {
   return url;
 };
 
-export async function handlePhantomCallback() {
-  const urlParams = new URLSearchParams(window.location.search);
-  console.log("URL Params:", urlParams.toString());
-  const phantomEncryptionPublicKey = urlParams.get("phantom_encryption_public_key");
-  const nonce = urlParams.get("nonce");
-  const data = urlParams.get("data");
+// const signAndSendTransaction = async (session) => {
+//   const transaction = await createTransferTransaction();
 
-  if (phantomEncryptionPublicKey && nonce && data) {
-    try {
-      const sharedSecretDapp = nacl.box.before(
-        bs58.decode(phantomEncryptionPublicKey),
-        dappKeyPair.secretKey
-      );
-      const decryptedData = decryptPayload(data, nonce, sharedSecretDapp);
-      localStorage.setItem("phantomSession", decryptedData.session);
-      localStorage.setItem("phantomPublicKey", decryptedData.public_key);
-      console.log("Authentication successful");
-      return true;
-    } catch (error) {
-      console.error("Decryption failed:", error);
-      return false;
-    }
-  } else {
-    console.error("Authentication failed: Missing parameters");
-    return false;
-  }
-}
+//   const serializedTransaction = transaction.serialize({
+//     requireAllSignatures: false,
+//   });
+
+//   const payload = {
+//     session,
+//     transaction: bs58.encode(serializedTransaction),
+//   };
+//   const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
+
+//   const params = new URLSearchParams({
+//     dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+//     nonce: bs58.encode(nonce),
+//     redirect_link: onSignAndSendTransactionRedirectLink,
+//     payload: bs58.encode(encryptedPayload),
+//   });
+
+//   addLog("Sending transaction...");
+//   const url = buildUrl("signAndSendTransaction", params);
+//   Linking.openURL(url);
+// };

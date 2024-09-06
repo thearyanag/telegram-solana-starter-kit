@@ -1,36 +1,50 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useInitData, useLaunchParams , useCloudStorage } from "@telegram-apps/sdk-react";
+import {
+  useInitData,
+  useLaunchParams,
+  useCloudStorage,
+} from "@telegram-apps/sdk-react";
 import { connect } from "../utils/phantom";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
+import { SuccessfulAuth } from "./successful-auth";
+import { FailedAuth } from "./failed-auth";
 
 export function Homepage() {
-  const initData = useInitData(true);
+  const initData = useInitData();
   const launchParams = useLaunchParams();
   const [authStatus, setAuthStatus] = useState("");
   const storage = useCloudStorage();
 
   const handleAuthenticate = () => {
-    let url = connect();
+    if (!initData?.user?.id) return;
+    let url = connect(initData?.user?.id);
     window.location.href = url;
   };
 
   useEffect(() => {
-    if (launchParams && launchParams.startParam === "command") {
+    if (launchParams && launchParams.startParam === "success") {
       setAuthStatus("success");
+    }
+    if (launchParams && launchParams.startParam === "failure") {
+      setAuthStatus("failure");
     }
   }, [launchParams]);
 
-  useEffect(() => {
-    if (authStatus === "success") redirect("/wallet");
-  }, [authStatus]);
+  // useEffect(() => {
+  //   if (authStatus === "success") redirect("/wallet");
+  // }, [authStatus]);
 
-  return (
+  return authStatus === "success" ? (
+    <SuccessfulAuth />
+  ) : authStatus === "failure" ? (
+    <FailedAuth />
+  ) : (
     <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-gray-100">
       <Card className="w-full max-w-md">
         <CardHeader>
@@ -89,6 +103,7 @@ export function Homepage() {
               <p className="text-sm text-gray-600">
                 {initData.user.isBot ? "Bot Account" : "User Account"}
               </p>
+              <p className="text-sm text-gray-600">hi {initData.startParam}</p>
             </div>
           )}
 
