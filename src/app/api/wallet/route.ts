@@ -19,7 +19,7 @@ export async function GET(
     );
   }
 
-  const connection = new Connection(process.env.RPC_URL as string);
+  const connection = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_URL as string);
 
   try {
     const publicKey = new PublicKey(walletAddress);

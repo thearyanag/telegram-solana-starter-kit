@@ -1,5 +1,12 @@
 // File: utils/phantom.ts
 import bs58 from "bs58";
+import {
+  Transaction,
+  PublicKey,
+  SystemProgram,
+  Connection,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
 import nacl from "tweetnacl";
 
 const dappKeyPair = nacl.box.keyPair.fromSecretKey(
@@ -7,6 +14,7 @@ const dappKeyPair = nacl.box.keyPair.fromSecretKey(
 );
 
 const onConnectRedirectLink = `${process.env.NEXT_PUBLIC_URL}/api/callback`;
+const onSignAndSendTransactionRedirectLink = `${process.env.NEXT_PUBLIC_URL}/api/callback`;
 
 const buildUrl = (path: string, params: URLSearchParams) =>
   `https://phantom.app/ul/v1/${path}?${params.toString()}`;
@@ -56,27 +64,56 @@ export const connect = (userId: number) => {
   return url;
 };
 
-// const signAndSendTransaction = async (session) => {
-//   const transaction = await createTransferTransaction();
+const createTransferTransaction = async (
+  from: string,
+  to: string,
+  amount: number
+) => {
+  const connection = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_URL as string);
+  const transaction = new Transaction().add(
+    SystemProgram.transfer({
+      fromPubkey: new PublicKey(from),
+      toPubkey: new PublicKey(to),
+      lamports: amount * LAMPORTS_PER_SOL,
+    })
+  );
+  transaction.feePayer = new PublicKey(from);
+  transaction.recentBlockhash = (
+    await connection.getLatestBlockhash()
+  ).blockhash;
+  return transaction;
+};
 
-//   const serializedTransaction = transaction.serialize({
-//     requireAllSignatures: false,
-//   });
+export const signAndSendTransaction = async (
+  session: string,
+  sharedSecret: string,
+  from: string,
+  to: string,
+  amount: number
+) => {
+  const transaction = await createTransferTransaction(from, to, amount);
 
-//   const payload = {
-//     session,
-//     transaction: bs58.encode(serializedTransaction),
-//   };
-//   const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
+  const serializedTransaction = transaction.serialize({
+    requireAllSignatures: false,
+  });
 
-//   const params = new URLSearchParams({
-//     dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-//     nonce: bs58.encode(nonce),
-//     redirect_link: onSignAndSendTransactionRedirectLink,
-//     payload: bs58.encode(encryptedPayload),
-//   });
+  const payload = {
+    session,
+    transaction: bs58.encode(serializedTransaction),
+  };
+  const [nonce, encryptedPayload] = encryptPayload(
+    payload,
+    bs58.decode(sharedSecret)
+  );
 
-//   addLog("Sending transaction...");
-//   const url = buildUrl("signAndSendTransaction", params);
-//   Linking.openURL(url);
-// };
+  const params = new URLSearchParams({
+    dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+    nonce: bs58.encode(nonce),
+    redirect_link: `${onSignAndSendTransactionRedirectLink}/${session}`,
+    payload: bs58.encode(encryptedPayload),
+  });
+
+  const url = buildUrl("signAndSendTransaction", params);
+
+  return url;
+};

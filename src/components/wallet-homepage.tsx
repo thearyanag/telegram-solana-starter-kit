@@ -7,13 +7,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowRightIcon, LogOutIcon, SendIcon } from "lucide-react";
 import { Transaction, WalletData } from "@/types";
 import { useUser } from "@/context/user-context";
+import { signAndSendTransaction } from "@/utils/phantom";
 
 export function WalletHomepage(): JSX.Element {
   const [walletAddress, setWalletAddress] = useState<string>();
   const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const { user, loading: userLoading, logout , setAuthStatus} = useUser();
+  const { user, loading: userLoading, logout, setAuthStatus } = useUser();
 
   useEffect(() => {
     if (!userLoading && user) {
@@ -52,10 +53,25 @@ export function WalletHomepage(): JSX.Element {
     window.location.href = "/";
   };
 
-  const handleSendMoney = (e: React.FormEvent<HTMLFormElement>): void => {
+  const handleSendMoney = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Implement send money logic here
-    console.log("Money sent");
+    let recipient = (e.currentTarget[0] as HTMLInputElement).value;
+    let amount = parseFloat((e.currentTarget[1] as HTMLInputElement).value);
+
+    if (!user?.session || !user?.shared_secret || !user?.public_key) {
+      console.error("User session, shared secret or public key is missing");
+      return;
+    }
+
+    let url = await signAndSendTransaction(
+      user?.session,
+      user?.shared_secret,
+      user?.public_key,
+      recipient,
+      amount
+    );
+
+    window.location.href = url;
   };
 
   return (
@@ -76,7 +92,7 @@ export function WalletHomepage(): JSX.Element {
           </div>
           <form onSubmit={handleSendMoney} className="space-y-4 mb-6">
             <Input type="text" placeholder="Recipient address" />
-            <Input type="number" placeholder="Amount" step="0.01" min="0" />
+            <Input type="number" placeholder="Amount" min="0" />
             <Button type="submit" className="w-full">
               <SendIcon className="mr-2 h-4 w-4" /> Send Money
             </Button>

@@ -34,10 +34,12 @@ export async function GET(
       dappKeyPair.secretKey
     );
     const decryptedData = decryptPayload(data, nonce, sharedSecretDapp);
-    console.log(decryptedData);
-    console.log("userId", userId);
-    setCache(`user_${userId}`, decryptedData);
-    console.log("Authentication successful");
+    setCache(`user_${userId}`, {
+      session: decryptedData.session,
+      public_key: decryptedData.public_key,
+      phantom_encryption_public_key,
+      shared_secret: bs58.encode(sharedSecretDapp),
+    });
     return NextResponse.redirect(
       `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/${process.env.NEXT_PUBLIC_BOT_APP_NAME}?startapp=success`
     );

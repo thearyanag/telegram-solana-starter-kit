@@ -5,6 +5,8 @@ import { useCloudStorage } from "@telegram-apps/sdk-react";
 type User = {
   public_key: string;
   session: string;
+  shared_secret: string;
+  phantom_encryption_public_key: string;
 };
 
 type UserContextType = {
