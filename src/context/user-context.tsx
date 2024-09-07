@@ -3,17 +3,17 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useCloudStorage } from "@telegram-apps/sdk-react";
 
 type User = {
-  // Define your user properties here
-  id: string;
-  firstName: string;
-  username?: string;
-  // Add other properties as needed
+  public_key: string;
+  session: string;
 };
 
 type UserContextType = {
   user: User | null;
   setUser: (user: User | null) => void;
   loading: boolean;
+  logout: () => void;
+  authStatus: string;
+  setAuthStatus: (status: string) => void;
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -23,7 +23,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const storage = useCloudStorage(true);
+  const storage = useCloudStorage();
+  const [authStatus, setAuthStatus] = useState("");
 
   useEffect(() => {
     const loadUser = async () => {
@@ -43,8 +44,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({
     loadUser();
   }, []);
 
+  const logout = () => {
+    setUser(null);
+    storage.delete("user");
+  };
+
   return (
-    <UserContext.Provider value={{ user, setUser, loading }}>
+    <UserContext.Provider
+      value={{ user, setUser, loading, logout, authStatus, setAuthStatus }}
+    >
       {children}
     </UserContext.Provider>
   );

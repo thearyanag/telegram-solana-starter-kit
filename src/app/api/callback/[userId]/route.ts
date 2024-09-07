@@ -35,6 +35,7 @@ export async function GET(
     );
     const decryptedData = decryptPayload(data, nonce, sharedSecretDapp);
     console.log(decryptedData);
+    console.log("userId", userId);
     setCache(`user_${userId}`, decryptedData);
     console.log("Authentication successful");
     return NextResponse.redirect(

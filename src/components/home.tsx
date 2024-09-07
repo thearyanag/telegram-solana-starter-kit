@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import {
   useInitData,
   useLaunchParams,
@@ -19,10 +19,9 @@ import { useUser } from "@/context/user-context";
 export function Homepage() {
   const initData = useInitData();
   const launchParams = useLaunchParams();
-  const [authStatus, setAuthStatus] = useState("");
   const storage = useCloudStorage();
   const router = useRouter();
-  const { user, setUser, loading } = useUser();
+  const { user, setUser, loading, authStatus, setAuthStatus } = useUser();
 
   const handleAuthenticate = () => {
     if (!initData?.user?.id) return;
@@ -31,17 +30,20 @@ export function Homepage() {
   };
 
   useEffect(() => {
-    if (user) {
-      router.push('/wallet');
-    } else if (launchParams && launchParams.startParam === "success") {
-      setAuthStatus("success");
+    if (user && !authStatus) {
+      router.push("/wallet");
+    } else if (
+      launchParams &&
+      launchParams.startParam === "success" &&
+      authStatus !== "success"
+    ) {
       if (initData?.user?.id)
         fetch(`/api/auth/${initData.user.id}`).then((res) => {
           if (res.ok) {
             res.json().then((data) => {
               storage.set("user", JSON.stringify(data));
+              setAuthStatus("success");
               setUser(data);
-              router.push('/wallet');
             });
           }
         });

@@ -17,3 +17,7 @@ export const setCache = (key: string, value: any) => {
 export const getCache = (key: string) => {
   return cache.get(key);
 };
+
+export const delCache = (key: string) => {
+  return cache.del(key);
+};

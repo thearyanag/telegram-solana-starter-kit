@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,12 +6,20 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowRightIcon, LogOutIcon, SendIcon } from "lucide-react";
 import { Transaction, WalletData } from "@/types";
+import { useUser } from "@/context/user-context";
 
 export function WalletHomepage(): JSX.Element {
-  const [walletAddress, setWalletAddress] = useState<string>("CRtPaRBqT274CaE5X4tFgjccx5XXY5zKYfLPnvitKdJx");
+  const [walletAddress, setWalletAddress] = useState<string>();
   const [balance, setBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const { user, loading: userLoading, logout , setAuthStatus} = useUser();
+
+  useEffect(() => {
+    if (!userLoading && user) {
+      setWalletAddress(user.public_key);
+    }
+  }, [userLoading, user]);
 
   const fetchWalletData = async (): Promise<void> => {
     if (!walletAddress) return;
@@ -39,6 +47,9 @@ export function WalletHomepage(): JSX.Element {
     setWalletAddress("");
     setBalance(0);
     setTransactions([]);
+    setAuthStatus("");
+    logout();
+    window.location.href = "/";
   };
 
   const handleSendMoney = (e: React.FormEvent<HTMLFormElement>): void => {
@@ -47,37 +58,13 @@ export function WalletHomepage(): JSX.Element {
     console.log("Money sent");
   };
 
-  if (!walletAddress) {
-    return (
-      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Connect Wallet</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Input
-              type="text"
-              placeholder="Enter wallet address"
-              value={walletAddress}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setWalletAddress(e.target.value)
-              }
-              className="mb-4"
-            />
-            <Button onClick={fetchWalletData} className="w-full">
-              Connect
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-2xl font-bold">My Wallet</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+          </CardTitle>
           <Button variant="ghost" size="icon" onClick={handleDisconnect}>
             <LogOutIcon className="h-4 w-4" />
           </Button>

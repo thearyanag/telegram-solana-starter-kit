@@ -43,8 +43,8 @@ export async function GET(
           id: sig.signature,
           type: postBalance > preBalance ? "Received" : "Sent",
           amount,
-          from: txDetails.transaction.message.accountKeys[0].pubkey.toString(),
-          to: txDetails.transaction.message.accountKeys[1].pubkey.toString(),
+          from: txDetails.transaction.message.accountKeys[0]?.pubkey.toString(),
+          to: txDetails.transaction.message.accountKeys[1]?.pubkey.toString(),
           date: new Date(sig.blockTime ? sig.blockTime * 1000 : Date.now())
             .toISOString()
             .split("T")[0],
