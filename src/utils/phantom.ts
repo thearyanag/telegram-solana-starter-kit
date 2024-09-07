@@ -54,7 +54,7 @@ export const encryptPayload = (payload: any, sharedSecret?: Uint8Array) => {
 export const connect = (userId: number) => {
   const params = new URLSearchParams({
     dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-    cluster: "mainnet-beta",
+    cluster: "devnet",
     app_url: `${process.env.NEXT_PUBLIC_URL}/`,
     redirect_link: `${onConnectRedirectLink}/${userId}`,
   });

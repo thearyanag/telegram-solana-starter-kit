@@ -92,7 +92,7 @@ export function WalletHomepage(): JSX.Element {
           </div>
           <form onSubmit={handleSendMoney} className="space-y-4 mb-6">
             <Input type="text" placeholder="Recipient address" />
-            <Input type="number" placeholder="Amount" min="0" />
+            <Input type="number" placeholder="Amount" step="0.001" min="0" />
             <Button type="submit" className="w-full">
               <SendIcon className="mr-2 h-4 w-4" /> Send Money
             </Button>
