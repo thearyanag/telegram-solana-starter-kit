@@ -9,10 +9,9 @@ import {
 } from "@solana/web3.js";
 import nacl from "tweetnacl";
 
-const dappKeyPair = nacl.box.keyPair.fromSecretKey(
-  bs58.decode("6WmwqxUhJ86s97czVsRREiP7m5WeMMQdnRE3e7ecwgUy")
+const DAPP_PUBLIC_KEY = new PublicKey(
+  process.env.NEXT_PUBLIC_SOLANA_DAPP_PUBLIC_KEY as string
 );
-
 const onConnectRedirectLink = `${process.env.NEXT_PUBLIC_URL}/api/callback`;
 const onSignAndSendTransactionRedirectLink = `${process.env.NEXT_PUBLIC_URL}/api/callback`;
 
@@ -53,7 +52,7 @@ export const encryptPayload = (payload: any, sharedSecret?: Uint8Array) => {
 
 export const connect = (userId: number) => {
   const params = new URLSearchParams({
-    dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+    dapp_encryption_public_key: DAPP_PUBLIC_KEY.toBase58(),
     cluster: "devnet",
     app_url: `${process.env.NEXT_PUBLIC_URL}/`,
     redirect_link: `${onConnectRedirectLink}/${userId}`,
@@ -69,7 +68,9 @@ const createTransferTransaction = async (
   to: string,
   amount: number
 ) => {
-  const connection = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_URL as string);
+  const connection = new Connection(
+    process.env.NEXT_PUBLIC_SOLANA_RPC_URL as string
+  );
   const transaction = new Transaction().add(
     SystemProgram.transfer({
       fromPubkey: new PublicKey(from),
@@ -107,7 +108,7 @@ export const signAndSendTransaction = async (
   );
 
   const params = new URLSearchParams({
-    dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+    dapp_encryption_public_key: DAPP_PUBLIC_KEY.toBase58(),
     nonce: bs58.encode(nonce),
     redirect_link: `${onSignAndSendTransactionRedirectLink}/${session}`,
     payload: bs58.encode(encryptedPayload),
